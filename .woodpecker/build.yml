@@ -8,6 +8,8 @@ variables:
       from_secret: minio_endpoint
     path_style: true
     region: eu-central-jcm
+    retry_count: 60
+    retry_delay: 10s
 
 when:
   - event: push
