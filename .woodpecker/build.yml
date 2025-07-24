@@ -1,0 +1,71 @@
+variables:
+  - &minio-settings
+    access_key:
+      from_secret: minio_access_key
+    secret_key:
+      from_secret: minio_secret_key
+    endpoint:
+      from_secret: minio_endpoint
+    path_style: true
+    region: eu-central-jcm
+
+when:
+  - event: push
+
+matrix:
+  ENVIRONMENT:
+    - twatchs3
+
+steps:
+  restore-cache:
+    image: meltwater/drone-cache
+    settings:
+      <<: *minio-settings
+      bucket: woodpecker-cache
+      cache_key: "{{ .Commit.Branch }}"
+      restore: true
+      mount:
+        - '.cache'
+  build:
+    image: python:3.11
+    commands:
+      # Set cache directories
+      - export PIP_CACHE_DIR=${CI_WORKSPACE}/.cache/pip
+      - export PLATFORMIO_CACHE_DIR=${CI_WORKSPACE}/.cache/platformio
+      # Install platformio
+      - pip install -U platformio
+      # Build the project
+      - pio run -e ${ENVIRONMENT}
+      # Prepare upload
+      - mkdir -p .pio/upload/
+      - cp .pio/build/${ENVIRONMENT}/firmware.bin .pio/upload/
+      - cp .pio/build/${ENVIRONMENT}/firmware.elf .pio/upload/
+      - cp .pio/build/${ENVIRONMENT}/firmware.map .pio/upload/
+      - cp .pio/build/${ENVIRONMENT}/partitions.bin .pio/upload/
+      - cp .pio/build/${ENVIRONMENT}/bootloader.bin .pio/upload/
+  upload-build:
+    image: woodpeckerci/plugin-s3
+    settings:
+      <<: *minio-settings
+      bucket: woodpecker
+      source: .pio/upload/*
+      strip_prefix: .pio/upload/
+      target: /artifacts/${CI_REPO}/${CI_PIPELINE_NUMBER}/public/${ENVIRONMENT}/
+  upload-branch:
+    image: woodpeckerci/plugin-s3
+    settings:
+      <<: *minio-settings
+      bucket: woodpecker
+      source: .pio/upload/*
+      strip_prefix: .pio/upload/
+      target: /artifacts/${CI_REPO}/${CI_COMMIT_BRANCH}/public/${ENVIRONMENT}/
+      overwrite: true
+  rebuild-cache:
+    image: meltwater/drone-cache
+    settings:
+      <<: *minio-settings
+      bucket: woodpecker-cache
+      cache_key: "{{ .Commit.Branch }}"
+      rebuild: true
+      mount:
+        - '.cache'
