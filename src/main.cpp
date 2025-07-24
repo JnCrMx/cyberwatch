@@ -1,62 +1,48 @@
-/**
- * @file      main.cpp
- * @author    Lewis He (lewishe@outlook.com)
- * @license   MIT
- * @copyright Copyright (c) 2025  ShenZhen XinYuan Electronic Technology Co., Ltd
- * @date      2025-05-15
- *
- */
 #include <LilyGoLib.h>
 #include <LV_Helper.h>
 
-static void btn_event_cb(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *btn = lv_event_get_target_obj(e);
-    if (code == LV_EVENT_CLICKED) {
-        static uint8_t cnt = 0;
-        cnt++;
-        /*Get the first child of the button which is the label and change its text*/
-        lv_obj_t *label = lv_obj_get_child(btn, 0);
-        lv_label_set_text_fmt(label, "Button: %d", cnt);
-        Serial.printf("Button :%d\n", cnt);
-    }
-}
+lv_obj_t* ui_time_label;
+lv_obj_t* ui_battery_label;
+lv_obj_t* ui_battery_bar;
 
 void setup()
 {
-    // To enable serial print output, you need to enable USB output settings
-    // Arduino IDE-> Tools -> USB CDC On Boot -> Enabled
     Serial.begin(115200);
-
-    // Initialize the LilyGoLib instance
     instance.begin();
-
-    // Call lvgl initialization
     beginLvglHelper(instance);
 
-    lv_obj_t *label = lv_label_create(lv_screen_active());        /*Add a label the current screen*/
-    lv_label_set_text(label, "Hello World");                 /*Set label text*/
-    lv_obj_center(label);                                   /*Set center alignment*/
+    ui_time_label = lv_label_create(lv_screen_active());
+    lv_label_set_text(ui_time_label, "Time: 00:00:00");
+    lv_obj_center(ui_time_label);
 
-    lv_obj_t *btn = lv_button_create(lv_screen_active());            /*Add a button the current screen*/
-    lv_obj_set_size(btn, 120, 50);                          /*Set its size*/
-    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);  /*Assign a callback to the button*/
-    lv_obj_align_to(btn, label, LV_ALIGN_OUT_BOTTOM_MID, 0, 0); /*Set the label to it and align it in the center below the label*/
+    ui_battery_label = lv_label_create(lv_screen_active());
+    lv_label_set_text(ui_battery_label, "Battery: ??%");
+    lv_obj_align_to(ui_battery_label, ui_time_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
-    lv_obj_t *btn_label = lv_label_create(btn);           /*Add a label to the button*/
-    lv_label_set_text(btn_label, "Button");               /*Set the labels text*/
-    lv_obj_center(btn_label);
+    ui_battery_bar = lv_bar_create(lv_screen_active());
+    lv_obj_set_size(ui_battery_bar, 100, 20);
+    lv_obj_align_to(ui_battery_bar, ui_battery_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+    lv_obj_set_style_bg_opa(ui_battery_bar, LV_OPA_COVER, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(ui_battery_bar, lv_color_hex(0xFF0000), LV_PART_INDICATOR);
+    lv_obj_set_style_bg_grad_color(ui_battery_bar, lv_color_hex(0x00FF00), LV_PART_INDICATOR);
+    lv_obj_set_style_bg_grad_dir(ui_battery_bar, LV_GRAD_DIR_HOR, LV_PART_INDICATOR);
+    lv_bar_set_range(ui_battery_bar, 0, 100);
+    lv_bar_set_value(ui_battery_bar, 100, LV_ANIM_OFF);
 
-    // Set brightness to MAX
-    // T-LoRa-Pager brightness level is 0 ~ 16
-    // T-Watch-S3 , T-Watch-S3-Plus , T-Watch-Ultra brightness level is 0 ~ 255
-    instance.setBrightness(1);
+    lv_timer_create([](lv_timer_t* timer){
+        auto datetime = instance.rtc.getDateTime();
+        lv_label_set_text_fmt(ui_time_label, "Time: %02d:%02d:%02d", datetime.getHour(), datetime.getMinute(), datetime.getSecond());
+
+        int battery_percent = instance.pmu.getBatteryPercent();
+        lv_label_set_text_fmt(ui_battery_label, "Battery: %d%%", battery_percent);
+        lv_bar_set_value(ui_battery_bar, battery_percent, LV_ANIM_OFF);
+    }, 1000, NULL);
+
+    instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
 }
 
 void loop()
 {
-    // lvgl task processing should be placed in the loop function
     lv_timer_handler();
     delay(2);
 }
