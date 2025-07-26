@@ -32,6 +32,37 @@ void enter_sleep_mode() {
     lv_disp_trig_activity(nullptr);
 }
 
+static void event_cb(lv_event_t * e)
+{
+    lv_obj_t * obj = lv_event_get_target_obj(e);
+    if(obj == nullptr) {
+        return; // not a valid object
+    }
+    lv_draw_task_t * draw_task = lv_event_get_draw_task(e);
+    if(draw_task == nullptr) {
+        return; // not a draw task event
+    }
+
+    lv_draw_dsc_base_t * base_dsc = (lv_draw_dsc_base_t *) lv_draw_task_get_draw_dsc(draw_task);
+    if(base_dsc == nullptr) {
+        return; // no draw descriptor available
+    }
+
+    if(base_dsc->part == LV_PART_MAIN) {
+        lv_draw_rect_dsc_t draw_dsc;
+        lv_draw_rect_dsc_init(&draw_dsc);
+        draw_dsc.bg_opa = LV_OPA_TRANSP;
+        draw_dsc.border_color = lv_color_hex(0xe4381c);
+        draw_dsc.border_width = 2;
+
+        lv_area_t a;
+        lv_obj_get_coords(obj, &a);
+        lv_area_increase(&a, 10, 10);
+
+        lv_draw_rect(base_dsc->layer, &draw_dsc, &a);
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -82,6 +113,8 @@ void setup()
     }, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_flag(ui_time_label, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_center(ui_time_label);
+    lv_obj_add_event_cb(ui_time_label, event_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
+    lv_obj_add_flag(ui_time_label, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
 
     ui_battery_label = lv_label_create(clock_tile);
     lv_label_set_text(ui_battery_label, "Battery: ??%");
@@ -127,7 +160,7 @@ void setup()
         } else {
             instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
         }
-    }, 1000, nullptr);
+    }, 100, nullptr);
 
     instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
     instance.enableCharge(1000);
