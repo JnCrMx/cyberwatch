@@ -32,9 +32,9 @@ steps:
     image: python:3.11
     commands:
       # Set cache directories
-      - export PIP_CACHE_DIR=${CI_WORKSPACE}/.cache/pip
-      - export PLATFORMIO_CACHE_DIR=${CI_WORKSPACE}/.cache/platformio
-      - mkdir -p ${PIP_CACHE_DIR} ${PLATFORMIO_CACHE_DIR}
+      - export PIP_CACHE_DIR=$CI_WORKSPACE/.cache/pip
+      - export PLATFORMIO_CACHE_DIR=$CI_WORKSPACE/.cache/platformio
+      - mkdir -p $PIP_CACHE_DIR $PLATFORMIO_CACHE_DIR
       # Install platformio
       - pip install -U platformio
       # Build the project
