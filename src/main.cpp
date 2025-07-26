@@ -49,17 +49,47 @@ static void event_cb(lv_event_t * e)
     }
 
     if(base_dsc->part == LV_PART_MAIN) {
-        lv_draw_rect_dsc_t draw_dsc;
-        lv_draw_rect_dsc_init(&draw_dsc);
-        draw_dsc.bg_opa = LV_OPA_TRANSP;
-        draw_dsc.border_color = lv_color_hex(0xe4381c);
-        draw_dsc.border_width = 2;
+        lv_draw_line_dsc_t draw_dsc;
+        lv_draw_line_dsc_init(&draw_dsc);
+        draw_dsc.color = lv_color_hex(0xe4381c);
+        draw_dsc.width = 2;
 
         lv_area_t a;
         lv_obj_get_coords(obj, &a);
-        lv_area_increase(&a, 10, 10);
 
-        lv_draw_rect(base_dsc->layer, &draw_dsc, &a);
+        int w = a.x2 - a.x1;
+        int h = a.y2 - a.y1;
+        int offset = std::min(w, h) / 5;
+
+        draw_dsc.p1.x = a.x1;
+        draw_dsc.p1.y = a.y1;
+        draw_dsc.p2.x = a.x2-offset;
+        draw_dsc.p2.y = a.y1;
+        lv_draw_line(base_dsc->layer, &draw_dsc);
+
+        draw_dsc.p1.x = a.x2-offset;
+        draw_dsc.p1.y = a.y1;
+        draw_dsc.p2.x = a.x2;
+        draw_dsc.p2.y = a.y1+2*offset;
+        lv_draw_line(base_dsc->layer, &draw_dsc);
+
+        draw_dsc.p1.x = a.x2;
+        draw_dsc.p1.y = a.y1+2*offset;
+        draw_dsc.p2.x = a.x2;
+        draw_dsc.p2.y = a.y2;
+        lv_draw_line(base_dsc->layer, &draw_dsc);
+
+        draw_dsc.p1.x = a.x2;
+        draw_dsc.p1.y = a.y2;
+        draw_dsc.p2.x = a.x1;
+        draw_dsc.p2.y = a.y2;
+        lv_draw_line(base_dsc->layer, &draw_dsc);
+
+        draw_dsc.p1.x = a.x1;
+        draw_dsc.p1.y = a.y2;
+        draw_dsc.p2.x = a.x1;
+        draw_dsc.p2.y = a.y1;
+        lv_draw_line(base_dsc->layer, &draw_dsc);
     }
 }
 
@@ -93,6 +123,7 @@ void setup()
     lv_label_set_text(ui_time_label, "00:00");
     lv_obj_set_style_text_font(ui_time_label, &lv_font_play_70, 0);
     lv_obj_set_style_text_color(ui_time_label, lv_color_hex(0xe4381c), 0);
+    lv_obj_set_style_pad_all(ui_time_label, 15, 0);
     lv_obj_set_user_data(ui_time_label, new ClockState());
     lv_obj_add_event_cb(ui_time_label, [](lv_event_t* e){
         lv_obj_t* obj = static_cast<lv_obj_t*>(e->current_target);
