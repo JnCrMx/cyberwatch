@@ -5,10 +5,12 @@
 #include "ui_battery_indicator.hpp"
 #include "ui_clock.hpp"
 
-lv_obj_t* ui_main;
+static lv_obj_t* ui_main;
 
-std::unique_ptr<class ui_clock> ui_clock;
-std::unique_ptr<class ui_battery_indicator> ui_battery_indicator;
+static std::unique_ptr<class ui_clock> ui_clock;
+static std::unique_ptr<class ui_battery_indicator> ui_battery_indicator;
+
+static bool is_dimmed = false;
 
 template<typename Callback>
 lv_event_dsc_t* lv_obj_add_event_handler(lv_obj_t* obj, lv_event_code_t filter, Callback&& event_cb)
@@ -25,7 +27,10 @@ void enter_sleep_mode() {
 
     // after waking up, force a refresh and activity trigger (so we won't sleep again immediately)
     lv_refr_now(nullptr);
-    lv_disp_trig_activity(nullptr);
+    lv_display_trigger_activity(nullptr);
+
+    instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
+    is_dimmed = false;
 
     ui_clock->update();
     ui_battery_indicator->update();
@@ -62,8 +67,10 @@ void setup()
             enter_sleep_mode();
         } else if(inactive_time > 10000) {
             instance.setBrightness(1);
-        } else {
+            is_dimmed = true;
+        } else if(is_dimmed) {
             instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
+            is_dimmed = false;
         }
     }, 100, nullptr);
 
@@ -71,7 +78,13 @@ void setup()
     instance.enableCharge(1000);
     instance.onEvent([](DeviceEvent_t event, void* user_data) {
         if (event == PMU_EVENT_KEY_CLICKED) {
-            enter_sleep_mode();
+            if(is_dimmed) {
+                lv_display_trigger_activity(nullptr); // trigger activity to prevent immediate dimming
+                instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
+                is_dimmed = false;
+            } else {
+                enter_sleep_mode();
+            }
         }
     }, nullptr);
 }
