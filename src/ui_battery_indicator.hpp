@@ -1,13 +1,14 @@
 #pragma once
 
-#include <lvgl.hpp>
+#include "lvgl.hpp"
 #include <memory>
+#include <LilyGoLib.h>
 
 LV_IMAGE_DECLARE(lv_img_battery);
 
-class ui_battery {
+class ui_battery_indicator {
     public:
-        ui_battery(lv_obj_t* parent) {
+        ui_battery_indicator(lv_obj_t* parent) {
             bar = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_bar_create(parent));
             lv_obj_set_size(bar.get(), 50, 25);
             lv_obj_set_style_pad_all(bar.get(), 5, LV_PART_MAIN);
@@ -23,7 +24,9 @@ class ui_battery {
             lv_bar_set_range(bar.get(), 0, 100);
             lv_bar_set_value(bar.get(), 100, LV_ANIM_OFF);
         }
-        void update(int battery_percent, bool is_charging) {
+        void update() {
+            int battery_percent = instance.pmu.getBatteryPercent();
+            bool is_charging = instance.pmu.isCharging();
             lv_bar_set_value(bar.get(), battery_percent, LV_ANIM_OFF);
         }
         lv_obj_t* obj() {
