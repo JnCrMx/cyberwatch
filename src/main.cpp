@@ -1,5 +1,6 @@
 #include <LilyGoLib.h>
 #include <LV_Helper.h>
+#include "ui_battery.hpp"
 
 LV_FONT_DECLARE(lv_font_play_40);
 LV_FONT_DECLARE(lv_font_play_70);
@@ -7,8 +8,7 @@ LV_FONT_DECLARE(lv_font_play_70);
 lv_obj_t* ui_main;
 
 lv_obj_t* ui_time_label;
-lv_obj_t* ui_battery_label;
-lv_obj_t* ui_battery_bar;
+std::unique_ptr<class ui_battery> ui_battery;
 
 template<typename Callback>
 lv_event_dsc_t* lv_obj_add_event_handler(lv_obj_t* obj, lv_event_code_t filter, Callback&& event_cb)
@@ -59,22 +59,22 @@ static void event_cb(lv_event_t * e)
 
         int w = a.x2 - a.x1;
         int h = a.y2 - a.y1;
-        int offset = std::min(w, h) / 5;
+        int offset = std::min(w, h);
 
         draw_dsc.p1.x = a.x1;
         draw_dsc.p1.y = a.y1;
-        draw_dsc.p2.x = a.x2-offset;
+        draw_dsc.p2.x = a.x2-offset/5;
         draw_dsc.p2.y = a.y1;
         lv_draw_line(base_dsc->layer, &draw_dsc);
 
-        draw_dsc.p1.x = a.x2-offset;
+        draw_dsc.p1.x = a.x2-offset/5;
         draw_dsc.p1.y = a.y1;
         draw_dsc.p2.x = a.x2;
-        draw_dsc.p2.y = a.y1+2*offset;
+        draw_dsc.p2.y = a.y1+offset/3;
         lv_draw_line(base_dsc->layer, &draw_dsc);
 
         draw_dsc.p1.x = a.x2;
-        draw_dsc.p1.y = a.y1+2*offset;
+        draw_dsc.p1.y = a.y1+offset/3;
         draw_dsc.p2.x = a.x2;
         draw_dsc.p2.y = a.y2;
         lv_draw_line(base_dsc->layer, &draw_dsc);
@@ -147,19 +147,9 @@ void setup()
     lv_obj_add_event_cb(ui_time_label, event_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
     lv_obj_add_flag(ui_time_label, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
 
-    ui_battery_label = lv_label_create(clock_tile);
-    lv_label_set_text(ui_battery_label, "Battery: ??%");
-    lv_obj_align_to(ui_battery_label, ui_time_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-
-    ui_battery_bar = lv_bar_create(clock_tile);
-    lv_obj_set_size(ui_battery_bar, 100, 20);
-    lv_obj_align_to(ui_battery_bar, ui_battery_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-    lv_obj_set_style_bg_opa(ui_battery_bar, LV_OPA_COVER, LV_PART_INDICATOR);
-    lv_obj_set_style_bg_color(ui_battery_bar, lv_color_hex(0xFF0000), LV_PART_INDICATOR);
-    lv_obj_set_style_bg_grad_color(ui_battery_bar, lv_color_hex(0x00FF00), LV_PART_INDICATOR);
-    lv_obj_set_style_bg_grad_dir(ui_battery_bar, LV_GRAD_DIR_HOR, LV_PART_INDICATOR);
-    lv_bar_set_range(ui_battery_bar, 0, 100);
-    lv_bar_set_value(ui_battery_bar, 100, LV_ANIM_OFF);
+    ui_battery = std::make_unique<class ui_battery>(lv_screen_active());
+    lv_obj_align(ui_battery->obj(), LV_ALIGN_TOP_RIGHT, -4, 4);
+    lv_obj_add_flag(ui_battery->obj(), LV_OBJ_FLAG_FLOATING);
 
     lv_timer_create([](lv_timer_t* timer){
         ClockState* state = static_cast<ClockState*>(lv_obj_get_user_data(ui_time_label));
@@ -174,13 +164,7 @@ void setup()
 
         int battery_percent = instance.pmu.getBatteryPercent();
         bool is_charging = instance.pmu.isCharging();
-        lv_label_set_text_fmt(ui_battery_label, "Battery: %d%%", battery_percent);
-        if (is_charging) {
-            lv_obj_set_style_text_color(ui_battery_label, lv_color_hex(0x00FF00), 0);
-        } else {
-            lv_obj_set_style_text_color(ui_battery_label, lv_color_hex(0xFFFFFF), 0);
-        }
-        lv_bar_set_value(ui_battery_bar, battery_percent, LV_ANIM_OFF);
+        ui_battery->update(battery_percent, is_charging);
     }, 1000, nullptr);
     lv_timer_create([](lv_timer_t* timer){
         uint32_t inactive_time = lv_display_get_inactive_time(nullptr);
