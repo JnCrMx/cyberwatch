@@ -7,6 +7,8 @@ LV_IMAGE_DECLARE(lv_img_battery);
 
 namespace indicators {
 
+constexpr const char* PREFS_KEY_SHOW_PERCENTAGE = "i_bat/percent";
+
 battery::battery(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     container = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_obj_create(parent));
     lv_obj_remove_style_all(container.get());
@@ -29,10 +31,15 @@ battery::battery(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     percentage_label = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(container.get()));
     lv_label_set_text(percentage_label.get(), "100%");
     lv_obj_set_style_text_color(percentage_label.get(), lv_color_hex(0xe4381c), 0);
+    lv_obj_set_style_text_align(percentage_label.get(), LV_TEXT_ALIGN_RIGHT, 0);
 
     lv_obj_align_to(percentage_label.get(), bar.get(), LV_ALIGN_LEFT_MID, -5, 0);
     lv_obj_align(bar.get(), LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_size(container.get(), lv_obj_get_width(percentage_label.get()) + 5 + lv_obj_get_width(bar.get()), 25);
+
+    if(!prefs.getBool(PREFS_KEY_SHOW_PERCENTAGE, true)) {
+        lv_obj_add_flag(percentage_label.get(), LV_OBJ_FLAG_HIDDEN);
+    }
+    update();
 }
 
 void battery::update() {
@@ -40,6 +47,12 @@ void battery::update() {
     bool is_charging = instance.pmu.isCharging();
     lv_bar_set_value(bar.get(), battery_percent, LV_ANIM_OFF);
     lv_label_set_text_fmt(percentage_label.get(), "%d%%", battery_percent);
+
+    int size = lv_obj_get_width(bar.get());
+    if(lv_obj_is_visible(percentage_label.get())) {
+        size += lv_obj_get_width(percentage_label.get()) + 5;
+    }
+    lv_obj_set_size(container.get(), size, 25);
 }
 
 }

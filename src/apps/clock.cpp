@@ -8,6 +8,8 @@ LV_FONT_DECLARE(lv_font_play_70);
 
 namespace apps {
 
+constexpr const char* PREFS_KEY_CLOCK_EXPANDED = "clock/expanded";
+
 clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     label = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(parent));
     lv_label_set_text(label.get(), "00:00");
@@ -25,13 +27,13 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
         state->expanded = !state->expanded;
         lv_obj_set_style_text_font(obj, state->expanded ? &lv_font_play_40 : &lv_font_play_70, 0);
         state->update();
-        state->prefs.putBool("apps::clock::expanded", state->expanded);
+        state->prefs.putBool(PREFS_KEY_CLOCK_EXPANDED, state->expanded);
     }, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(label.get(), cyberpunk_decoration_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
 
-    expanded = prefs.getBool("apps::clock::expanded", false);
+    expanded = prefs.getBool(PREFS_KEY_CLOCK_EXPANDED, false);
     lv_obj_set_style_text_font(label.get(), expanded ? &lv_font_play_40 : &lv_font_play_70, 0);
     update();
 }
