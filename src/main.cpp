@@ -1,14 +1,18 @@
 #include <LilyGoLib.h>
 #include <LV_Helper.h>
+#include <Preferences.h>
 
 #include "cyberpunk_ui.hpp"
-#include "ui_battery_indicator.hpp"
-#include "ui_clock.hpp"
+
+#include "apps/clock.hpp"
+
+#include "indicators/battery.hpp"
+
+static Preferences prefs;
 
 static lv_obj_t* ui_main;
-
-static std::unique_ptr<class ui_clock> ui_clock;
-static std::unique_ptr<class ui_battery_indicator> ui_battery_indicator;
+static std::unique_ptr<apps::clock> app_clock;
+static std::unique_ptr<indicators::battery> indicator_battery;
 
 static bool is_dimmed = false;
 
@@ -32,8 +36,8 @@ void enter_sleep_mode() {
     instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
     is_dimmed = false;
 
-    ui_clock->update();
-    ui_battery_indicator->update();
+    app_clock->update();
+    indicator_battery->update();
 }
 
 void setup()
@@ -41,6 +45,7 @@ void setup()
     Serial.begin(115200);
     instance.begin();
     beginLvglHelper(instance);
+    prefs.begin("CyberWatch", false);
 
     init_cyberpunk_theme();
     lv_disp_set_theme(lv_display_get_default(), &cyberpunk_theme);
@@ -49,16 +54,16 @@ void setup()
     ui_main = lv_tileview_create(lv_screen_active());
     lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_VER);
 
-    ui_clock = std::make_unique<class ui_clock>(clock_tile);
-    lv_obj_center(ui_clock->obj());
+    app_clock = std::make_unique<apps::clock>(prefs, clock_tile);
+    lv_obj_center(app_clock->obj());
 
-    ui_battery_indicator = std::make_unique<class ui_battery_indicator>(lv_screen_active());
-    lv_obj_align(ui_battery_indicator->obj(), LV_ALIGN_TOP_RIGHT, -4, 4);
-    lv_obj_add_flag(ui_battery_indicator->obj(), LV_OBJ_FLAG_FLOATING);
+    indicator_battery = std::make_unique<indicators::battery>(prefs, lv_screen_active());
+    lv_obj_align(indicator_battery->obj(), LV_ALIGN_TOP_RIGHT, -4, 4);
+    lv_obj_add_flag(indicator_battery->obj(), LV_OBJ_FLAG_FLOATING);
 
     lv_timer_create([](lv_timer_t* timer){
-        ui_clock->update();
-        ui_battery_indicator->update();
+        app_clock->update();
+        indicator_battery->update();
     }, 1000, nullptr);
 
     lv_timer_create([](lv_timer_t* timer){
