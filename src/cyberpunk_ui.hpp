@@ -10,6 +10,7 @@ namespace colors {
 #undef lv_color_hex
 
 void cyberpunk_decoration_cb(lv_event_t * e);
+void cyberpunk_decoration_apply(lv_obj_t* obj);
 
 extern lv_style_t cyberpunk_style;
 extern lv_theme_t cyberpunk_theme;

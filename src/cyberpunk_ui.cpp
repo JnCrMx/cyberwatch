@@ -20,7 +20,7 @@ void cyberpunk_decoration_cb(lv_event_t * e)
     if(base_dsc->part == LV_PART_MAIN) {
         lv_draw_line_dsc_t draw_dsc;
         lv_draw_line_dsc_init(&draw_dsc);
-        draw_dsc.color = colors::PRIMARY;
+        draw_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
         draw_dsc.width = 2;
 
         lv_area_t a;
@@ -60,6 +60,12 @@ void cyberpunk_decoration_cb(lv_event_t * e)
         draw_dsc.p2.y = a.y1;
         lv_draw_line(base_dsc->layer, &draw_dsc);
     }
+}
+
+void cyberpunk_decoration_apply(lv_obj_t* obj) {
+    lv_obj_add_event_cb(obj, cyberpunk_decoration_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
+    lv_obj_add_flag(obj, LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
+    lv_obj_set_style_border_opa(obj, LV_OPA_TRANSP, LV_PART_MAIN);
 }
 
 lv_style_t cyberpunk_style;

@@ -30,8 +30,7 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
         state->prefs.putBool(PREFS_KEY_CLOCK_EXPANDED, state->expanded);
     }, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(label.get(), cyberpunk_decoration_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
-    lv_obj_add_flag(label.get(), LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
+    cyberpunk_decoration_apply(label.get());
     lv_obj_center(label.get());
 
     expanded = prefs.getBool(PREFS_KEY_CLOCK_EXPANDED, false);
