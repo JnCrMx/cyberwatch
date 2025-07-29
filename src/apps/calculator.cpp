@@ -5,6 +5,7 @@
 #include <utility>
 #include <LilyGoLib.h>
 #include "cyberpunk_ui.hpp"
+#include "hardware.hpp"
 #include "tinyexpr.h"
 
 LV_FONT_DECLARE(lv_font_play_40);
@@ -44,6 +45,7 @@ calculator::calculator(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     lv_obj_set_style_outline_width(button.get(), 0, LV_PART_MAIN);
     lv_obj_set_style_shadow_width(button.get(), 0, LV_PART_MAIN);
     lv_obj_add_event_cb(button.get(), [](lv_event_t* e){
+        haptic_feedback();
         calculator* self = static_cast<calculator*>(lv_event_get_user_data(e));
         lv_obj_send_event(self->textarea.get(), LV_EVENT_READY, NULL);
     }, LV_EVENT_CLICKED, this);
@@ -81,6 +83,7 @@ calculator::calculator(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     lv_buttonmatrix_set_button_ctrl_all(keypad.get(), LV_BUTTONMATRIX_CTRL_CLICK_TRIG);
 
     lv_obj_add_event_cb(keypad.get(), [](lv_event_t* e){
+        haptic_feedback();
         lv_obj_t * obj = lv_event_get_target_obj(e);
         calculator* self = static_cast<calculator*>(lv_event_get_user_data(e));
 

@@ -3,6 +3,7 @@
 #include <Preferences.h>
 
 #include "cyberpunk_ui.hpp"
+#include "hardware.hpp"
 
 #include "apps/clock.hpp"
 #include "apps/calculator.hpp"
@@ -41,9 +42,11 @@ void enter_sleep_mode() {
     app_clock->update();
     indicator_battery->update();
 }
+void haptic_feedback() {
+    instance.vibrator();
+}
 
-void setup()
-{
+void setup() {
     Serial.begin(115200);
     instance.begin();
     beginLvglHelper(instance);

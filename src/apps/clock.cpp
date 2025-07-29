@@ -2,6 +2,7 @@
 
 #include <LilyGoLib.h>
 #include "cyberpunk_ui.hpp"
+#include "hardware.hpp"
 
 LV_FONT_DECLARE(lv_font_play_40);
 LV_FONT_DECLARE(lv_font_play_70);
@@ -19,6 +20,7 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     lv_obj_set_style_pad_all(label.get(), 15, 0);
     lv_obj_set_user_data(label.get(), this);
     lv_obj_add_event_cb(label.get(), [](lv_event_t* e){
+        haptic_feedback();
         lv_obj_t* obj = static_cast<lv_obj_t*>(e->current_target);
         clock* state = static_cast<clock*>(lv_obj_get_user_data(obj));
         if(!state) {
