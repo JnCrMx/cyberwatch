@@ -20,7 +20,7 @@ void cyberpunk_decoration_cb(lv_event_t * e)
     if(base_dsc->part == LV_PART_MAIN) {
         lv_draw_line_dsc_t draw_dsc;
         lv_draw_line_dsc_init(&draw_dsc);
-        draw_dsc.color = lv_color_hex(0xe4381c);
+        draw_dsc.color = colors::PRIMARY;
         draw_dsc.width = 2;
 
         lv_area_t a;
@@ -68,8 +68,8 @@ lv_theme_t cyberpunk_theme;
 void init_cyberpunk_theme()
 {
     lv_style_init(&cyberpunk_style);
-    lv_style_set_bg_color(&cyberpunk_style, lv_color_hex(0x0b0c16));
-    lv_style_set_text_color(&cyberpunk_style, lv_color_hex(0xffffff));
+    lv_style_set_bg_color(&cyberpunk_style, colors::BACKGROUND);
+    lv_style_set_text_color(&cyberpunk_style, colors::PRIMARY);
 
     lv_theme_t * th_act = lv_display_get_theme(nullptr);
     cyberpunk_theme = *th_act;

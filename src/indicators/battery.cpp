@@ -1,6 +1,7 @@
 #include "battery.hpp"
 
 #include <LilyGoLib.h>
+#include "cyberpunk_ui.hpp"
 
 LV_FONT_DECLARE(lv_font_play_14);
 LV_IMAGE_DECLARE(lv_img_battery);
@@ -19,7 +20,7 @@ battery::battery(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     lv_obj_set_style_pad_right(bar.get(), 9, LV_PART_MAIN);
 
     lv_obj_set_style_bg_opa(bar.get(), LV_OPA_COVER, LV_PART_INDICATOR);
-    lv_obj_set_style_bg_color(bar.get(), lv_color_hex(0xe4381c), LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(bar.get(), colors::PRIMARY, LV_PART_INDICATOR);
     lv_obj_set_style_radius(bar.get(), 0, LV_PART_INDICATOR);
 
     lv_obj_set_style_bg_opa(bar.get(), LV_OPA_COVER, LV_PART_MAIN);
@@ -30,7 +31,7 @@ battery::battery(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
 
     percentage_label = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(container.get()));
     lv_label_set_text(percentage_label.get(), "100%");
-    lv_obj_set_style_text_color(percentage_label.get(), lv_color_hex(0xe4381c), 0);
+    lv_obj_set_style_text_color(percentage_label.get(), colors::PRIMARY, 0);
     lv_obj_set_style_text_align(percentage_label.get(), LV_TEXT_ALIGN_RIGHT, 0);
 
     lv_obj_align_to(percentage_label.get(), bar.get(), LV_ALIGN_LEFT_MID, -5, 0);

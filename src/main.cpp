@@ -5,6 +5,7 @@
 #include "cyberpunk_ui.hpp"
 
 #include "apps/clock.hpp"
+#include "apps/calculator.hpp"
 
 #include "indicators/battery.hpp"
 
@@ -12,6 +13,7 @@ static Preferences prefs;
 
 static lv_obj_t* ui_main;
 static std::unique_ptr<apps::clock> app_clock;
+static std::unique_ptr<apps::calculator> app_calculator;
 static std::unique_ptr<indicators::battery> indicator_battery;
 
 static bool is_dimmed = false;
@@ -48,18 +50,24 @@ void setup()
     prefs.begin("CyberWatch", false);
 
     init_cyberpunk_theme();
-    lv_disp_set_theme(lv_display_get_default(), &cyberpunk_theme);
+    lv_display_set_theme(lv_display_get_default(), &cyberpunk_theme);
     lv_obj_add_style(lv_screen_active(), &cyberpunk_style, 0);
 
     ui_main = lv_tileview_create(lv_screen_active());
-    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_VER);
+    lv_obj_set_style_bg_opa(ui_main, LV_OPA_TRANSP, LV_PART_MAIN);
 
+    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
     app_clock = std::make_unique<apps::clock>(prefs, clock_tile);
-    lv_obj_center(app_clock->obj());
+
+    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
+    app_calculator = std::make_unique<apps::calculator>(prefs, calculator_tile);
+
+    lv_tileview_set_tile(ui_main, clock_tile, LV_ANIM_ON);
 
     indicator_battery = std::make_unique<indicators::battery>(prefs, lv_screen_active());
     lv_obj_align(indicator_battery->obj(), LV_ALIGN_TOP_RIGHT, -4, 4);
     lv_obj_add_flag(indicator_battery->obj(), LV_OBJ_FLAG_FLOATING);
+    lv_obj_move_background(indicator_battery->obj());
 
     lv_timer_create([](lv_timer_t* timer){
         app_clock->update();

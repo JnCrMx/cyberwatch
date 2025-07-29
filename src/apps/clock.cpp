@@ -14,8 +14,8 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     label = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(parent));
     lv_label_set_text(label.get(), "00:00");
     lv_obj_set_style_text_font(label.get(), &lv_font_play_70, 0);
-    lv_obj_set_style_text_color(label.get(), lv_color_hex(0xe4381c), 0);
-    lv_obj_set_style_border_color(label.get(), lv_color_hex(0xe4381c), 0);
+    lv_obj_set_style_text_color(label.get(), colors::PRIMARY, 0);
+    lv_obj_set_style_border_color(label.get(), colors::PRIMARY, 0);
     lv_obj_set_style_pad_all(label.get(), 15, 0);
     lv_obj_set_user_data(label.get(), this);
     lv_obj_add_event_cb(label.get(), [](lv_event_t* e){
@@ -32,6 +32,7 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(label.get(), cyberpunk_decoration_cb, LV_EVENT_DRAW_TASK_ADDED, nullptr);
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_SEND_DRAW_TASK_EVENTS);
+    lv_obj_center(label.get());
 
     expanded = prefs.getBool(PREFS_KEY_CLOCK_EXPANDED, false);
     lv_obj_set_style_text_font(label.get(), expanded ? &lv_font_play_40 : &lv_font_play_70, 0);
