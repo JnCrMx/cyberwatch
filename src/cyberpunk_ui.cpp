@@ -1,6 +1,38 @@
 #include "cyberpunk_ui.hpp"
 #include <algorithm>
 
+static void draw_cyberpunk_border(lv_layer_t* layer, lv_draw_line_dsc_t& dsc, const lv_area_t& area, int offset) {
+    dsc.p1.x = area.x1;
+    dsc.p1.y = area.y1;
+    dsc.p2.x = area.x2-offset/5;
+    dsc.p2.y = area.y1;
+    lv_draw_line(layer, &dsc);
+
+    dsc.p1.x = area.x2-offset/5;
+    dsc.p1.y = area.y1;
+    dsc.p2.x = area.x2;
+    dsc.p2.y = area.y1+offset/3;
+    lv_draw_line(layer, &dsc);
+
+    dsc.p1.x = area.x2;
+    dsc.p1.y = area.y1+offset/3;
+    dsc.p2.x = area.x2;
+    dsc.p2.y = area.y2;
+    lv_draw_line(layer, &dsc);
+
+    dsc.p1.x = area.x2;
+    dsc.p1.y = area.y2;
+    dsc.p2.x = area.x1;
+    dsc.p2.y = area.y2;
+    lv_draw_line(layer, &dsc);
+
+    dsc.p1.x = area.x1;
+    dsc.p1.y = area.y2;
+    dsc.p2.x = area.x1;
+    dsc.p2.y = area.y1;
+    lv_draw_line(layer, &dsc);
+}
+
 void cyberpunk_decoration_cb(lv_event_t * e)
 {
     lv_obj_t * obj = lv_event_get_target_obj(e);
@@ -17,48 +49,37 @@ void cyberpunk_decoration_cb(lv_event_t * e)
         return; // no draw descriptor available
     }
 
+    lv_area_t a;
+    lv_obj_get_coords(obj, &a);
+
+    int w = a.x2 - a.x1;
+    int h = a.y2 - a.y1;
+    int offset = std::min(w, h);
+
     if(base_dsc->part == LV_PART_MAIN) {
-        lv_draw_line_dsc_t draw_dsc;
-        lv_draw_line_dsc_init(&draw_dsc);
-        draw_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
-        draw_dsc.width = 2;
+        lv_draw_line_dsc_t line_dsc;
+        lv_draw_line_dsc_init(&line_dsc);
+        line_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
+        line_dsc.width = 2;
+        draw_cyberpunk_border(base_dsc->layer, line_dsc, a, offset);
+    } else if(lv_obj_check_type(obj, &lv_table_class) || lv_obj_check_type(obj, &lv_textarea_class)) {
+        lv_draw_triangle_dsc_t tri_dsc;
+        lv_draw_triangle_dsc_init(&tri_dsc);
+        tri_dsc.bg_color = colors::BACKGROUND;
+        tri_dsc.bg_opa = LV_OPA_COVER;
+        tri_dsc.p[0].x = a.x2-offset/5;
+        tri_dsc.p[0].y = a.y1-2;
+        tri_dsc.p[1].x = a.x2+2;
+        tri_dsc.p[1].y = a.y1-2;
+        tri_dsc.p[2].x = a.x2+2;
+        tri_dsc.p[2].y = a.y1+offset/3;
+        lv_draw_triangle(base_dsc->layer, &tri_dsc);
 
-        lv_area_t a;
-        lv_obj_get_coords(obj, &a);
-
-        int w = a.x2 - a.x1;
-        int h = a.y2 - a.y1;
-        int offset = std::min(w, h);
-
-        draw_dsc.p1.x = a.x1;
-        draw_dsc.p1.y = a.y1;
-        draw_dsc.p2.x = a.x2-offset/5;
-        draw_dsc.p2.y = a.y1;
-        lv_draw_line(base_dsc->layer, &draw_dsc);
-
-        draw_dsc.p1.x = a.x2-offset/5;
-        draw_dsc.p1.y = a.y1;
-        draw_dsc.p2.x = a.x2;
-        draw_dsc.p2.y = a.y1+offset/3;
-        lv_draw_line(base_dsc->layer, &draw_dsc);
-
-        draw_dsc.p1.x = a.x2;
-        draw_dsc.p1.y = a.y1+offset/3;
-        draw_dsc.p2.x = a.x2;
-        draw_dsc.p2.y = a.y2;
-        lv_draw_line(base_dsc->layer, &draw_dsc);
-
-        draw_dsc.p1.x = a.x2;
-        draw_dsc.p1.y = a.y2;
-        draw_dsc.p2.x = a.x1;
-        draw_dsc.p2.y = a.y2;
-        lv_draw_line(base_dsc->layer, &draw_dsc);
-
-        draw_dsc.p1.x = a.x1;
-        draw_dsc.p1.y = a.y2;
-        draw_dsc.p2.x = a.x1;
-        draw_dsc.p2.y = a.y1;
-        lv_draw_line(base_dsc->layer, &draw_dsc);
+        lv_draw_line_dsc_t line_dsc;
+        lv_draw_line_dsc_init(&line_dsc);
+        line_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
+        line_dsc.width = 2;
+        draw_cyberpunk_border(base_dsc->layer, line_dsc, a, offset);
     }
 }
 
