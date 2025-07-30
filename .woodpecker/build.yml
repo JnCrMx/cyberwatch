@@ -13,6 +13,7 @@ variables:
 
 when:
   - event: push
+  - event: manual
 
 matrix:
   ENVIRONMENT:
