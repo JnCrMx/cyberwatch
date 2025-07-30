@@ -4,4 +4,4 @@
 
 | Settings | Clocks | Tools | Games |
 | --- | --- | --- | --- |
-| | **Main Clock** | Calculator | |
+| Battery Info | **Main Clock** | Calculator | |

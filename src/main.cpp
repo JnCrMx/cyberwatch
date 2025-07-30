@@ -7,6 +7,7 @@
 
 #include "apps/clock.hpp"
 #include "apps/calculator.hpp"
+#include "apps/info_battery.hpp"
 
 #include "indicators/battery.hpp"
 
@@ -15,6 +16,7 @@ static Preferences prefs;
 static lv_obj_t* ui_main;
 static std::unique_ptr<apps::clock> app_clock;
 static std::unique_ptr<apps::calculator> app_calculator;
+static std::unique_ptr<apps::info_battery> app_info_battery;
 static std::unique_ptr<indicators::battery> indicator_battery;
 
 static bool is_dimmed = false;
@@ -59,13 +61,16 @@ void setup() {
     ui_main = lv_tileview_create(lv_screen_active());
     lv_obj_set_style_bg_opa(ui_main, LV_OPA_TRANSP, LV_PART_MAIN);
 
-    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
+    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
     app_clock = std::make_unique<apps::clock>(prefs, clock_tile);
 
-    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
+    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 2, 0, LV_DIR_ALL);
     app_calculator = std::make_unique<apps::calculator>(prefs, calculator_tile);
 
-    lv_tileview_set_tile(ui_main, clock_tile, LV_ANIM_ON);
+    lv_obj_t* info_battery_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
+    app_info_battery = std::make_unique<apps::info_battery>(prefs, info_battery_tile);
+
+    lv_tileview_set_tile(ui_main, clock_tile, LV_ANIM_OFF);
 
     indicator_battery = std::make_unique<indicators::battery>(prefs, lv_screen_active());
     lv_obj_align(indicator_battery->obj(), LV_ALIGN_TOP_RIGHT, -4, 4);
@@ -74,6 +79,7 @@ void setup() {
 
     lv_timer_create([](lv_timer_t* timer){
         app_clock->update();
+        app_info_battery->update();
         indicator_battery->update();
     }, 1000, nullptr);
 
