@@ -3,13 +3,12 @@
 #include <LilyGoLib.h>
 #include "cyberpunk_ui.hpp"
 #include "hardware.hpp"
+#include "prefs.hpp"
 
 LV_FONT_DECLARE(lv_font_play_40);
 LV_FONT_DECLARE(lv_font_play_70);
 
 namespace apps {
-
-constexpr const char* PREFS_KEY_CLOCK_EXPANDED = "clock/expanded";
 
 clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     label = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(parent));
@@ -29,13 +28,13 @@ clock::clock(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
         state->expanded = !state->expanded;
         lv_obj_set_style_text_font(obj, state->expanded ? &lv_font_play_40 : &lv_font_play_70, 0);
         state->update();
-        state->prefs.putBool(PREFS_KEY_CLOCK_EXPANDED, state->expanded);
+        state->prefs.putBool(preferences::apps::clock::EXPANDED, state->expanded);
     }, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_flag(label.get(), LV_OBJ_FLAG_CLICKABLE);
     cyberpunk_decoration_apply(label.get());
     lv_obj_center(label.get());
 
-    expanded = prefs.getBool(PREFS_KEY_CLOCK_EXPANDED, false);
+    expanded = prefs.getBool(preferences::apps::clock::EXPANDED, false);
     lv_obj_set_style_text_font(label.get(), expanded ? &lv_font_play_40 : &lv_font_play_70, 0);
     update();
 }

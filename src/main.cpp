@@ -4,10 +4,12 @@
 
 #include "cyberpunk_ui.hpp"
 #include "hardware.hpp"
+#include "prefs.hpp"
 
 #include "apps/clock.hpp"
 #include "apps/calculator.hpp"
 #include "apps/info_battery.hpp"
+#include "apps/settings_general.hpp"
 
 #include "indicators/battery.hpp"
 
@@ -17,6 +19,7 @@ static lv_obj_t* ui_main;
 static std::unique_ptr<apps::clock> app_clock;
 static std::unique_ptr<apps::calculator> app_calculator;
 static std::unique_ptr<apps::info_battery> app_info_battery;
+static std::unique_ptr<apps::settings_general> app_settings_general;
 static std::unique_ptr<indicators::battery> indicator_battery;
 
 static bool is_dimmed = false;
@@ -45,6 +48,9 @@ void enter_sleep_mode() {
     indicator_battery->update();
 }
 void haptic_feedback() {
+    if(!prefs.getBool(preferences::system::HAPTIC_ENABLED, true)) {
+        return;
+    }
     instance.vibrator();
 }
 
@@ -61,11 +67,14 @@ void setup() {
     ui_main = lv_tileview_create(lv_screen_active());
     lv_obj_set_style_bg_opa(ui_main, LV_OPA_TRANSP, LV_PART_MAIN);
 
-    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
+    lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 2, 0, LV_DIR_ALL);
     app_clock = std::make_unique<apps::clock>(prefs, clock_tile);
 
-    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 2, 0, LV_DIR_ALL);
+    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 3, 0, LV_DIR_ALL);
     app_calculator = std::make_unique<apps::calculator>(prefs, calculator_tile);
+
+    lv_obj_t* settings_general_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
+    app_settings_general = std::make_unique<apps::settings_general>(prefs, settings_general_tile);
 
     lv_obj_t* info_battery_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
     app_info_battery = std::make_unique<apps::info_battery>(prefs, info_battery_tile);
@@ -85,9 +94,9 @@ void setup() {
 
     lv_timer_create([](lv_timer_t* timer){
         uint32_t inactive_time = lv_display_get_inactive_time(nullptr);
-        if(inactive_time > 30000) {
+        if(inactive_time > 30000 && prefs.getBool(preferences::system::AUTO_SLEEP, true)) {
             enter_sleep_mode();
-        } else if(inactive_time > 10000) {
+        } else if(inactive_time > 10000 && prefs.getBool(preferences::system::AUTO_DIM, true)) {
             instance.setBrightness(1);
             is_dimmed = true;
         } else if(is_dimmed) {

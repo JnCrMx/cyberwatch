@@ -80,6 +80,15 @@ void cyberpunk_decoration_cb(lv_event_t * e)
         line_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
         line_dsc.width = 2;
         draw_cyberpunk_border(base_dsc->layer, line_dsc, a, offset);
+    } else if(lv_obj_check_type(obj, &lv_switch_class)) {
+        lv_draw_line_dsc_t line_dsc;
+        lv_draw_line_dsc_init(&line_dsc);
+        line_dsc.color = colors::BACKGROUND;
+        line_dsc.width = 6;
+        draw_cyberpunk_border(base_dsc->layer, line_dsc, a, offset);
+        line_dsc.color = lv_obj_get_style_border_color(obj, LV_PART_MAIN);
+        line_dsc.width = 2;
+        draw_cyberpunk_border(base_dsc->layer, line_dsc, a, offset);
     }
 }
 

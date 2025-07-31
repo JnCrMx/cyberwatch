@@ -2,8 +2,6 @@
 
 #include <LilyGoLib.h>
 #include "cyberpunk_ui.hpp"
-#include "hardware.hpp"
-#include "tinyexpr.h"
 
 LV_FONT_DECLARE(lv_font_play_25);
 

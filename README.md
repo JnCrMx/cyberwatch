@@ -2,6 +2,6 @@
 
 ## App Grid
 
-| Settings | Clocks | Tools | Games |
-| --- | --- | --- | --- |
-| Battery Info | **Main Clock** | Calculator | |
+| System Info | Settings | Clocks | Tools | Games |
+| --- | --- | --- | --- | --- |
+| Battery Info | General Settings | **Main Clock** | Calculator | |
