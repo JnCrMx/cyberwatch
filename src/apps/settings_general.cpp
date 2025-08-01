@@ -62,6 +62,15 @@ settings_general::settings_general(Preferences& prefs, lv_obj_t* parent) : prefs
 
     lv_obj_t* last_obj = title.get();
 
+    lv_obj_t* boot_animation = create_switch(parent, "Boot Animation", [](lv_event_t* e) {
+        settings_general* self = static_cast<settings_general*>(lv_event_get_user_data(e));
+        lv_obj_t* obj = lv_event_get_target_obj(e);
+        self->prefs.putBool(preferences::system::BOOT_ANIMATION, lv_obj_has_state(obj, LV_STATE_CHECKED));
+        haptic_feedback();
+    }, this, prefs.getBool(preferences::system::BOOT_ANIMATION, true));
+    lv_obj_align_to(boot_animation, last_obj, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 5);
+    last_obj = boot_animation;
+
     lv_obj_t* auto_sleep = create_switch(parent, "Auto Sleep", [](lv_event_t* e) {
         settings_general* self = static_cast<settings_general*>(lv_event_get_user_data(e));
         lv_obj_t* obj = lv_event_get_target_obj(e);

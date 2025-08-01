@@ -14,6 +14,11 @@
 
 #include "indicators/battery.hpp"
 
+LV_IMAGE_DECLARE(lv_img_startup_0);
+LV_IMAGE_DECLARE(lv_img_startup_1);
+LV_IMAGE_DECLARE(lv_img_startup_2);
+LV_IMAGE_DECLARE(lv_img_startup_3);
+
 static Preferences prefs;
 
 static lv_obj_t* ui_main;
@@ -155,6 +160,24 @@ void setup() {
             }
         }
     }, nullptr);
+
+    if(prefs.getBool(preferences::system::BOOT_ANIMATION, true)) {
+        static const lv_image_dsc_t* startup_images[4] = {
+            &lv_img_startup_0,
+            &lv_img_startup_1,
+            &lv_img_startup_2,
+            &lv_img_startup_3
+        };
+        lv_obj_t* startup_animation = lv_animimg_create(lv_screen_active());
+        lv_animimg_set_src(startup_animation, reinterpret_cast<const void**>(startup_images), 4);
+        lv_animimg_set_duration(startup_animation, 2500);
+        lv_animimg_set_repeat_count(startup_animation, LV_ANIM_REPEAT_INFINITE);
+        lv_obj_center(startup_animation);
+        lv_obj_move_foreground(startup_animation);
+        lv_obj_add_flag(startup_animation, LV_OBJ_FLAG_FLOATING);
+        lv_animimg_start(startup_animation);
+        lv_obj_delete_delayed(startup_animation, 2500);
+    }
 }
 
 void loop()
