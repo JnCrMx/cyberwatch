@@ -8,6 +8,7 @@
 
 #include "apps/clock.hpp"
 #include "apps/calculator.hpp"
+#include "apps/flashlight.hpp"
 #include "apps/info_battery.hpp"
 #include "apps/settings_general.hpp"
 
@@ -18,10 +19,13 @@ static Preferences prefs;
 static lv_obj_t* ui_main;
 static std::unique_ptr<apps::clock> app_clock;
 static std::unique_ptr<apps::calculator> app_calculator;
+static std::unique_ptr<apps::flashlight> app_flashlight;
 static std::unique_ptr<apps::info_battery> app_info_battery;
 static std::unique_ptr<apps::settings_general> app_settings_general;
 static std::unique_ptr<indicators::battery> indicator_battery;
 
+static bool sleep_mode_blocked = false;
+static bool dim_blocked = false;
 static bool is_dimmed = false;
 
 template<typename Callback>
@@ -35,6 +39,10 @@ lv_event_dsc_t* lv_obj_add_event_handler(lv_obj_t* obj, lv_event_code_t filter, 
 }
 
 void enter_sleep_mode() {
+    if(sleep_mode_blocked) {
+        return;
+    }
+
     instance.lightSleep();
 
     // after waking up, force a refresh and activity trigger (so we won't sleep again immediately)
@@ -54,6 +62,30 @@ void haptic_feedback() {
     instance.vibrator();
 }
 
+void block_sleep_mode() {
+    sleep_mode_blocked = true;
+}
+void unblock_sleep_mode() {
+    sleep_mode_blocked = false;
+}
+void block_dim() {
+    dim_blocked = true;
+    if(is_dimmed) {
+        instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
+        is_dimmed = false;
+    }
+}
+void unblock_dim() {
+    dim_blocked = false;
+}
+
+void lock_tiles() {
+    lv_obj_remove_flag(ui_main, LV_OBJ_FLAG_SCROLLABLE);
+}
+void unlock_tiles() {
+    lv_obj_add_flag(ui_main, LV_OBJ_FLAG_SCROLLABLE);
+}
+
 void setup() {
     Serial.begin(115200);
     instance.begin();
@@ -67,10 +99,15 @@ void setup() {
     ui_main = lv_tileview_create(lv_screen_active());
     lv_obj_set_style_bg_opa(ui_main, LV_OPA_TRANSP, LV_PART_MAIN);
 
+    // Clocks
     lv_obj_t* clock_tile = lv_tileview_add_tile(ui_main, 2, 0, LV_DIR_ALL);
     app_clock = std::make_unique<apps::clock>(prefs, clock_tile);
 
-    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 3, 0, LV_DIR_ALL);
+    // Tools
+    lv_obj_t* flashlight_tile = lv_tileview_add_tile(ui_main, 3, 0, LV_DIR_ALL);
+    app_flashlight = std::make_unique<apps::flashlight>(prefs, flashlight_tile);
+
+    lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 3, 1, LV_DIR_ALL);
     app_calculator = std::make_unique<apps::calculator>(prefs, calculator_tile);
 
     lv_obj_t* settings_general_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
@@ -96,7 +133,7 @@ void setup() {
         uint32_t inactive_time = lv_display_get_inactive_time(nullptr);
         if(inactive_time > 30000 && prefs.getBool(preferences::system::AUTO_SLEEP, true)) {
             enter_sleep_mode();
-        } else if(inactive_time > 10000 && prefs.getBool(preferences::system::AUTO_DIM, true)) {
+        } else if(inactive_time > 10000 && prefs.getBool(preferences::system::AUTO_DIM, true) && !dim_blocked) {
             instance.setBrightness(1);
             is_dimmed = true;
         } else if(is_dimmed) {

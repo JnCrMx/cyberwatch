@@ -4,4 +4,5 @@
 
 | System Info | Settings | Clocks | Tools | Games |
 | --- | --- | --- | --- | --- |
-| Battery Info | General Settings | **Main Clock** | Calculator | |
+| Battery Info | General Settings | **Main Clock** | Flashlight | |
+| | | | Calculator | |
