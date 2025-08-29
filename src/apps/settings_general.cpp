@@ -44,7 +44,7 @@ lv_obj_t* create_switch(lv_obj_t* parent, const char* label_text, lv_event_cb_t 
 settings_general::settings_general(Preferences& prefs, lv_obj_t* parent) : prefs(prefs) {
     title = std::unique_ptr<lv_obj_t, lv_obj_deleter>(lv_label_create(parent));
     lv_obj_set_style_text_font(title.get(), &lv_font_play_25, 0);
-    lv_label_set_text(title.get(), "General Settings");
+    lv_label_set_text(title.get(), "General");
     lv_obj_set_width(title.get(), LV_PCT(90));
     lv_obj_align(title.get(), LV_ALIGN_TOP_MID, 0, 35);
 

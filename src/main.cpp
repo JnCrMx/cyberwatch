@@ -11,6 +11,7 @@
 #include "apps/flashlight.hpp"
 #include "apps/info_battery.hpp"
 #include "apps/settings_general.hpp"
+#include "apps/settings_datetime.hpp"
 
 #include "indicators/battery.hpp"
 
@@ -27,6 +28,7 @@ static std::unique_ptr<apps::calculator> app_calculator;
 static std::unique_ptr<apps::flashlight> app_flashlight;
 static std::unique_ptr<apps::info_battery> app_info_battery;
 static std::unique_ptr<apps::settings_general> app_settings_general;
+static std::unique_ptr<apps::settings_datetime> app_settings_datetime;
 static std::unique_ptr<indicators::battery> indicator_battery;
 
 static bool sleep_mode_blocked = false;
@@ -115,9 +117,14 @@ void setup() {
     lv_obj_t* calculator_tile = lv_tileview_add_tile(ui_main, 3, 1, LV_DIR_ALL);
     app_calculator = std::make_unique<apps::calculator>(prefs, calculator_tile);
 
+    // Settings
     lv_obj_t* settings_general_tile = lv_tileview_add_tile(ui_main, 1, 0, LV_DIR_ALL);
     app_settings_general = std::make_unique<apps::settings_general>(prefs, settings_general_tile);
 
+    lv_obj_t* settings_datetime_tile = lv_tileview_add_tile(ui_main, 1, 1, LV_DIR_ALL);
+    app_settings_datetime = std::make_unique<apps::settings_datetime>(prefs, settings_datetime_tile);
+
+    // System Info
     lv_obj_t* info_battery_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
     app_info_battery = std::make_unique<apps::info_battery>(prefs, info_battery_tile);
 
