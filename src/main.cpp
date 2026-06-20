@@ -10,6 +10,7 @@
 #include "apps/calculator.hpp"
 #include "apps/flashlight.hpp"
 #include "apps/info_battery.hpp"
+#include "apps/info_sensors.hpp"
 #include "apps/settings_general.hpp"
 #include "apps/settings_datetime.hpp"
 
@@ -27,6 +28,7 @@ static std::unique_ptr<apps::clock> app_clock;
 static std::unique_ptr<apps::calculator> app_calculator;
 static std::unique_ptr<apps::flashlight> app_flashlight;
 static std::unique_ptr<apps::info_battery> app_info_battery;
+static std::unique_ptr<apps::info_sensors> app_info_sensors;
 static std::unique_ptr<apps::settings_general> app_settings_general;
 static std::unique_ptr<apps::settings_datetime> app_settings_datetime;
 static std::unique_ptr<indicators::battery> indicator_battery;
@@ -50,7 +52,7 @@ void enter_sleep_mode() {
         return;
     }
 
-    instance.lightSleep();
+    instance.lightSleep(static_cast<WakeupSource_t>(WAKEUP_SRC_POWER_KEY | WAKEUP_SRC_TOUCH_PANEL | WAKEUP_SRC_SENSOR));
 
     // after waking up, force a refresh and activity trigger (so we won't sleep again immediately)
     lv_refr_now(nullptr);
@@ -128,6 +130,9 @@ void setup() {
     lv_obj_t* info_battery_tile = lv_tileview_add_tile(ui_main, 0, 0, LV_DIR_ALL);
     app_info_battery = std::make_unique<apps::info_battery>(prefs, info_battery_tile);
 
+    lv_obj_t* info_sensors_tile = lv_tileview_add_tile(ui_main, 0, 1, LV_DIR_ALL);
+    app_info_sensors = std::make_unique<apps::info_sensors>(prefs, info_sensors_tile);
+
     lv_tileview_set_tile(ui_main, clock_tile, LV_ANIM_OFF);
 
     indicator_battery = std::make_unique<indicators::battery>(prefs, lv_screen_active());
@@ -156,6 +161,26 @@ void setup() {
 
     instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
     instance.enableCharge(1000);
+
+    instance.sensor.configAccelerometer();
+    instance.sensor.enableAccelerometer();
+    instance.sensor.enablePedometer();
+    // IRQs
+    instance.sensor.disableActivityIRQ();
+    instance.sensor.disableAnyNoMotionIRQ();
+    instance.sensor.disablePedometerIRQ();
+
+    bool wakeup_double_tap = prefs.getBool(preferences::system::WAKEUP_DOUBLE_TAP, false);
+    bool wakeup_tilt = prefs.getBool(preferences::system::WAKEUP_TILT, false);
+    instance.sensor.enableFeature(SensorBMA423::FEATURE_WAKEUP, wakeup_double_tap);
+    instance.sensor.configFeatureInterrupt(SensorBMA423::FEATURE_WAKEUP, wakeup_double_tap);
+    instance.sensor.enableFeature(SensorBMA423::FEATURE_TILT, wakeup_tilt);
+    instance.sensor.configFeatureInterrupt(SensorBMA423::FEATURE_TILT, wakeup_tilt);
+    if(wakeup_double_tap || wakeup_tilt) {
+        instance.sensor.configInterrupt(0, 0); // needs to be logic level low, so it works with light sleep
+        gpio_set_intr_type(static_cast<gpio_num_t>(digitalPinToGPIONumber(SENSOR_INT)), static_cast<gpio_int_type_t>(FALLING & 0x7));
+    }
+
     instance.onEvent([](DeviceEvent_t event, void* user_data) {
         if (event == PMU_EVENT_KEY_CLICKED) {
             if(is_dimmed) {
